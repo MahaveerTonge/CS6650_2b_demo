@@ -41,14 +41,10 @@ func init() {
 
 func main() {
 	r := gin.Default()
-
-	// Support both direct paths and /v1 prefixed paths from api.yaml
 	r.GET("/products/:productId", getProduct)
 	r.POST("/products/:productId/details", addProductDetails)
 	r.GET("/v1/products/:productId", getProduct)
 	r.POST("/v1/products/:productId/details", addProductDetails)
-
-	// Matches default container_port (8080) in terraform/variables.tf
 	r.Run(":8080")
 }
 
