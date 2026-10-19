@@ -52,7 +52,7 @@ curl -i -X POST http://<your-server-url>:8080/products/1/details \
 ```bash
 curl -i http://<your-server-url>:8080/invalid-endpoint
 ```
-![Baseline 50 Users](/Users/mahaveer/Desktop/Screenshot 2026-10-18 at 5.07.19 PM.png)
+![Response Codes](screenshots/response.png)
 ---
 
 ## Part 4: Load Testing & Performance Report
@@ -65,22 +65,22 @@ At a low concurrency of 50 users, the system performed flawlessly.
 *   **Latency:** Median response times hovered around ~20ms.
 *   **Conclusion:** Both standard `HttpUser` and `FastHttpUser` frameworks handled the baseline load identically with negligible overhead.
 
-![Baseline 50 Users](/Users/mahaveer/Desktop/normal50.png)
-![Baseline 50 Users](/Users/mahaveer/Desktop/Fast50.png)
+![Baseline 50 Users](screenshots/normal50.png)
+![fasthttp 50 Users](screenshots/fast50.png)
 
 ### Stress Test & Capacity Limits (5,000 Users)
 To test architectural resilience, concurrency was scaled up to 5,000 active users.
 *   **Resilience:** The Go backend and AWS ECS infrastructure successfully processed hundreds of thousands of requests with a **0% failure rate**.
 *   **Throughput:** Standard `HttpUser` achieved an impressive **~2,032 Requests Per Second (RPS)** with a 99th percentile latency of 1.8 seconds.
 
-![Stress Test 5000 Users](/Users/mahaveer/Desktop/normal5000.png)
+![Stress Test 5000 Users](screenshots/normal5000.png)
 
 ### Comparative Analysis: `HttpUser` vs. `FastHttpUser`
 A comparative stress test was run using `FastHttpUser` (which uses a C-based HTTP parser) to see if throughput could be improved further.
 *   **Finding:** Counterintuitively, `FastHttpUser` performed *worse* at 5,000 users, dropping to ~1,369 RPS and experiencing massive tail latency spikes (99th percentile of 7.5 seconds).
 *   **Architectural Explanation:** Because `FastHttpUser` fires non-blocking requests so aggressively over the internet, it saturated the client machine's local TCP socket buffers and port allocations. This caused local network congestion on the testing machine before the AWS server could even be overwhelmed. The standard `HttpUser` paced requests more cleanly, resulting in higher sustained throughput.
 
-![FastHttpUser 5000 Users](/Users/mahaveer/Desktop/fast 5000.png)
+![FastHttpUser 5000 Users](screenshots/fast5000.png)
 
 ---
 
@@ -91,7 +91,7 @@ To ensure system health can be monitored in real-time and debugged post-incident
 ### Grafana Dashboard (Macro-Level Monitoring)
 Below is the Grafana dashboard tracking the RED signals, clearly demonstrating the transition from an "idle" state to a heavily "loaded" state during the Locust stress test.
 
-![Grafana Dashboard](/Users/mahaveer/Desktop/Screenshot 2026-10-18 at 10.04.04 PM.png)
+![Grafana Dashboard](screenshots/graph.png)
 
 ### Structured JSON Logs (Micro-Level Debugging)
 Every request generates a structured log entry for deep debugging. Here is an excerpt from the test run:
