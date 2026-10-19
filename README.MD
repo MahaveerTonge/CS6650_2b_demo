@@ -9,87 +9,55 @@ A RESTful microservice built with Go and the Gin framework implementing the Prod
 * [AWS CLI](https://aws.amazon.com/cli/) configured with valid credentials (`~/.aws/credentials`)
 
 ---
+## 📂 Directory Structure
 
-## Deploying Infrastructure on Any Machine (Terraform)
+*   **`src/`**: Contains the application source code (`product-service.go`), the `Dockerfile` for building the container, and the local observability configuration (`docker-compose.yml`, `prometheus.yml`).
+*   **`terraform/`**: Contains all declarative Infrastructure-as-Code (IaC) configuration files used to provision the AWS ECS cluster, task definitions, and networking resources.
+*   **`screenshots/`**: Contains all evaluation graphs and Locust results from load testing.
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/MahaveerTonge/CS6650_2b_demo
-   cd CS6650_2b_demo/terraform
-Initialize Terraform providers and modules:
+---
 
-Bash
+## 🚀 Deployment Instructions
+
+To deploy this infrastructure and run the API on a new machine, follow these steps:
+
+**1. Infrastructure Provisioning (AWS)**
+
+Ensure you have the AWS CLI configured with appropriate credentials and Terraform installed.
+
+
+cd terraform
 terraform init
-Build the Docker image, push to ECR, and provision ECS Fargate:
-
-Bash
 terraform apply -auto-approve
-Retrieve the live server address:
-After deployment completes, note the public IP output displayed in your terminal (or run terraform output).
 
-Tear down infrastructure when finished:
+**2. Local Observability Stack**
 
-Bash
-terraform destroy -auto-approve
-API Documentation & Response Code Examples
-Replace BASE_URL below with http://localhost:8080 (local testing) or http://<ECS_PUBLIC_IP>:8080 (AWS deployment).
+   To run Prometheus and Grafana locally for monitoring:
 
-1. GET /products/{productId}
-200 OK – Product found successfully:
+cd src
+docker-compose up -d
+Grafana will be available at http://localhost:3000.
 
-Bash
-curl -i http://BASE_URL/products/1
-404 Not Found – Product does not exist:
+ GET Product (200 OK)
 
-Bash
-curl -i http://BASE_URL/products/999
-500 Internal Server Error – Simulated server failure:
+curl -i http://<your-server-url>:8080/products/1 
 
-Bash
-curl -i http://BASE_URL/products/500
-2. POST /products/{productId}/details
-204 No Content – Product details updated successfully:
+POST Update Product Details (200 OK)
+
+curl -i -X POST http://<your-server-url>:8080/products/1/details \
+-H "Content-Type: application/json" \
+-d '{"sku": "SKU-123", "manufacturer": "Acme", "weight": 1250}'
+3. Error Handling (404 Not Found)
 
 Bash
-curl -i -X POST http://BASE_URL/products/1/details \
-  -H "Content-Type: application/json" \
-  -d '{
-    "product_id": 1,
-    "sku": "NEW-SKU-999",
-    "manufacturer": "Updated Corp",
-    "category_id": 10,
-    "weight": 500,
-    "some_other_id": 20
-  }'
-400 Bad Request – Invalid input data (missing required fields or ID mismatch):
+curl -i http://<your-server-url>:8080/invalid-endpoint
+Request Logs
 
-Bash
-curl -i -X POST http://BASE_URL/products/1/details \
-  -H "Content-Type: application/json" \
-  -d '{"product_id": 1, "sku": ""}'
-404 Not Found – Target product ID does not exist:
+2026/10/18 22:00:11 {"duration":0,"endpoint":"/products/:productId/details","method":"POST","status":204}
+[GIN] 2026/10/18 - 22:00:11 | 204 | 57.792µs |             ::1 | POST     "/products/1/details"
 
-Bash
-curl -i -X POST http://BASE_URL/products/999/details \
-  -H "Content-Type: application/json" \
-  -d '{
-    "product_id": 999,
-    "sku": "GHOST-SKU",
-    "manufacturer": "Acme",
-    "category_id": 1,
-    "weight": 100,
-    "some_other_id": 1
-  }'
-500 Internal Server Error – Simulated server failure:
+2026/10/18 22:00:11 {"duration":0,"endpoint":"/products/:productId","method":"GET","status":200}
+[GIN] 2026/10/18 - 22:00:11 | 200 | 22.791µs |             ::1 | GET      "/products/1"
 
-Bash
-curl -i -X POST http://BASE_URL/products/500/details \
-  -H "Content-Type: application/json" \
-  -d '{
-    "product_id": 500,
-    "sku": "ERR-SKU",
-    "manufacturer": "Acme",
-    "category_id": 1,
-    "weight": 100,
-    "some_other_id": 1
-  }'
+2026/10/18 22:00:11 {"duration":0,"endpoint":"/products/:productId","method":"GET","status":200}
+[GIN] 2026/10/18 - 22:00:11 | 200 | 25.834µs |             ::1 | GET      "/products/1"
