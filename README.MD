@@ -41,7 +41,7 @@ Here are examples of how to interact with the server and the expected response c
 curl -i http://<your-server-url>:8080/products/1
 ```
 
-**2. POST Update Product Details (200 OK)**
+**2. POST Update Product Details (204 No Content)**
 ```bash
 curl -i -X POST http://<your-server-url>:8080/products/1/details \
 -H "Content-Type: application/json" \
